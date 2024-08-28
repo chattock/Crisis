@@ -1,7 +1,6 @@
 let data = [];
 let journals = [];
 
-// Preload the JSONL file
 document.addEventListener("DOMContentLoaded", () => {
     fetch('part-1.jsonl')
         .then(response => response.text())
@@ -17,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             populateJournalSelect();
-            generateGraph(); // Automatically generate the graph
+            generateGraph();
         })
         .catch(error => console.error('Error loading JSONL file:', error));
 });
@@ -45,7 +44,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
 function populateJournalSelect() {
     const journalSelect = document.getElementById('journalSelect');
-    journalSelect.innerHTML = ''; // Clear existing options
+    journalSelect.innerHTML = '';
     journals.forEach(journal => {
         const option = document.createElement('option');
         option.value = journal;
@@ -73,7 +72,6 @@ function generateGraph() {
     const fullText = journalData.map(item => item.fullText).join(' ');
     let tokens = fullText.toLowerCase().split(/\W+/);
 
-    // Filter out common words before processing
     tokens = tokens.filter(word => !commonWords.has(word));
 
     const relatedWords = [];
@@ -107,10 +105,12 @@ function generateGraph() {
     const G = new Map();
     G.set(targetWord, wordFreq[targetWord] || 1);
 
-    const edges = []; // Initialize edges array here
+    const edges = [];
 
     topWords.forEach(([word, freq]) => {
         G.set(word, freq);
+        edges.push([targetWord, word]);
+
         if (neighborsDict[word]) {
             const neighbors = Object.entries(neighborsDict[word].reduce((acc, w) => {
                 acc[w] = (acc[w] || 0) + 1;
@@ -121,14 +121,15 @@ function generateGraph() {
 
             neighbors.forEach(([neighbor]) => {
                 if (!G.has(neighbor)) {
-                    G.set(neighbor, 1); // Ensure neighbor is added to graph
+                    G.set(neighbor, 1);
                 }
-                edges.push([word, neighbor]); // Add edges for neighbors
+                if (neighborsDict[neighbor].includes(word)) {
+                    edges.push([word, neighbor]);
+                }
             });
         }
     });
 
-    // Calculate maxFreq from the graph data
     const maxFreq = Math.max(...Array.from(G.values()));
 
     const nodes = [];
@@ -137,15 +138,15 @@ function generateGraph() {
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
         
-        // Calculate target proximity
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
+        const targetProximity = word === targetWord ? Math.pow(1 - (size / maxFreq), targetProximityStrength / 4) : 1;
         
-        // Calculate neighbor proximity
-        const neighborProximity = Math.pow(connectedEdges / neighborsCount, -neighborWeight);
+        let neighborProximity = 1;
+        if (neighborsDict[word]) {
+            neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
+        }
         
-        // Combine both proximities
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
-        
+    
         const scale = 10;
         const node = {
             x: (Math.random() - 0.5) * combinedProximity * scale,
@@ -159,17 +160,13 @@ function generateGraph() {
         nodes.push(node);
         nodeMap.set(word, node);
     });
-
-    G.forEach((_, word) => {
-        if (word !== targetWord) {
-            edges.push([targetWord, word]);
-        }
-    });
-
+    
     const targetNode = nodeMap.get(targetWord);
-    targetNode.x = 0;
-    targetNode.y = 0;
-    targetNode.z = 0;
+    if (targetNode) {
+        targetNode.x = 0;
+        targetNode.y = 0;
+        targetNode.z = 0;
+    }
 
     const nodeTrace = {
         x: nodes.map(node => node.x),
@@ -185,7 +182,9 @@ function generateGraph() {
                 title: 'Word Frequency'
             }
         },
-        type: 'scatter3d'
+        type: 'scatter3d',
+        customdata: nodes.map(node => node.word),
+        hoverinfo: 'text'
     };
 
     const edgeTrace = {
@@ -221,9 +220,43 @@ function generateGraph() {
     };
 
     Plotly.newPlot('graph', [edgeTrace, nodeTrace], layout);
+
+    document.getElementById('graph').on('plotly_click', function(data) {
+        const clickedWord = data.points[0].customdata;
+        const filteredEdges = edges.filter(edge => edge.includes(clickedWord));
+        const connectedWords = new Set(filteredEdges.flat());
+
+        const filteredNodes = nodes.filter(node => connectedWords.has(node.word));
+        const filteredNodeTrace = {
+            ...nodeTrace,
+            x: filteredNodes.map(node => node.x),
+            y: filteredNodes.map(node => node.y),
+            z: filteredNodes.map(node => node.z),
+            text: filteredNodes.map(node => node.text),
+            customdata: filteredNodes.map(node => node.word)
+        };
+
+        const filteredEdgeTrace = {
+            ...edgeTrace,
+            x: [],
+            y: [],
+            z: []
+        };
+
+        filteredEdges.forEach(([from, to]) => {
+            const fromNode = nodeMap.get(from);
+            const toNode = nodeMap.get(to);
+            if (fromNode && toNode) {
+                filteredEdgeTrace.x.push(fromNode.x, toNode.x, null);
+                filteredEdgeTrace.y.push(fromNode.y, toNode.y, null);
+                filteredEdgeTrace.z.push(fromNode.z, toNode.z, null);
+            }
+        });
+
+        Plotly.react('graph', [filteredEdgeTrace, filteredNodeTrace], layout);
+    });
 }
 
-// Update display values for sliders
 document.getElementById('neighborWeight').addEventListener('input', function() {
     document.getElementById('neighborWeightValue').textContent = this.value;
 });
