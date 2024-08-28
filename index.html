@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Graph Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Network Graph Visualization</h1>
+    <p>This tool allows you to visualize relationships between words in a network graph format, providing insights into data patterns. Click the Button below to download data that can be used for this website. This website works when using data from https://constellate.org/ when the full text is requested </p>
+</header>
+<section>
+    <button class="btn btn-color-1" onclick="window.open('https://www.dropbox.com/scl/fi/56g0fpuhs7kqcbbo504xs/part-1.jsonl?rlkey=t12galcfufa6bie9cnt6ahjrz&st=hv8mz3rg&dl=1')">downlaod data</button>
+</section>
+
+<main>
+    <section>
+        <h2>Upload JSONL File</h2>
+        <label for="fileInput" class="btn btn-color-1">Choose File</label>
+        <input type="file" id="fileInput" accept=".jsonl">
+        <p>Select a JSONL file to upload. This file should contain the data for visualization.</p>
+    </section>
+
+    <section>
+        <h2>Select Journal</h2>
+        <select id="journalSelect">
+            <!-- Options will be populated dynamically -->
+        </select>
+        <p>Choose a journal from the list. This will filter the data specific to the selected journal.</p>
+    </section>
+
+    <section>
+        <h2>Edit Common Words</h2>
+        <textarea id="commonWordsText" rows="10" cols="50">
+is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, be, has, have, was, were, are, can, will, would, should, could, a, this, that, these, those, there, their, they, them, he, as, she, his, her, him, i, you, we, us, our, your, ., ,, !, ?, :, ;, (, ), [, ], {, }, <, >, if, whether, while, although, ', which, had, ``, 's, not, '', -, when, 'the, during, its, p., over, such, led, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, q, w, e, r, t, y, u, i, o, p, a, s, d, f, g, h, j, k, l, z, x, c, v, b, n, m,
+        </textarea>
+        <p>Modify the list of common words to exclude from analysis. These words are typically non-informative.</p>
+    </section>
+
+    <section>
+        <label for="targetWord">Target Word:</label>
+        <input type="text" id="targetWord" value="crisis">
+        <p>Enter the main word you want to analyze. The graph will highlight relationships with this word.</p>
+
+        <label for="topWordsCount">Top Words count Related to Target Word:</label>
+        <input type="number" id="topWordsCount" value="50" min="1">
+        <p>Specify how many top related words to display. This helps to focus on the most relevant connections.</p>
+
+        <label for="neighborsCount">Neighbors Count:</label>
+        <input type="number" id="neighborsCount" value="0" min="1">
+        <p>Set the number of neighboring words to consider for each connection. More neighbors can show broader context.</p>
+
+        <label for="neighborWeight">Neighbor Weight:</label>
+        <input type="range" id="neighborWeight" min="-1" max="1" step="0.1" value="0">
+        <span id="neighborWeightValue">0</span>
+        <p>Adjust the influence of neighboring words. A higher weight gives more importance to these connections.</p>
+
+        <label for="targetProximityStrength">Target Word Proximity Strength:</label>
+        <input type="range" id="targetProximityStrength" min="0" max="10" step="0.1" value="0">
+        <span id="targetProximityStrengthValue">0</span>
+        <p>Control the strength of proximity for the target word. This can emphasize or deemphasize its immediate connections.</p>
+    </section>
+
+    <div class="btn-container">
+        <button class="btn btn-color-1" onclick="generateGraph()">Generate Graph</button>
+    </div>
+
+    <section>
+        <div id="graph-container">
+            <div id="graph"></div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2024 James Chattock Network Graph Visualization</p>
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>
