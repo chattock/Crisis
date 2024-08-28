@@ -1,6 +1,7 @@
 let data = [];
 let journals = [];
 
+// Preload the JSONL file
 document.addEventListener("DOMContentLoaded", () => {
     fetch('part-1.jsonl')
         .then(response => response.text())
@@ -16,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             populateJournalSelect();
-            generateGraph();
+            generateGraph(); // Automatically generate the graph
         })
         .catch(error => console.error('Error loading JSONL file:', error));
 });
@@ -44,7 +45,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
 function populateJournalSelect() {
     const journalSelect = document.getElementById('journalSelect');
-    journalSelect.innerHTML = '';
+    journalSelect.innerHTML = ''; // Clear existing options
     journals.forEach(journal => {
         const option = document.createElement('option');
         option.value = journal;
@@ -72,6 +73,7 @@ function generateGraph() {
     const fullText = journalData.map(item => item.fullText).join(' ');
     let tokens = fullText.toLowerCase().split(/\W+/);
 
+    // Filter out common words before processing
     tokens = tokens.filter(word => !commonWords.has(word));
 
     const relatedWords = [];
@@ -138,13 +140,16 @@ function generateGraph() {
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
         
+        // Calculate target proximity only for the target word
         const targetProximity = word === targetWord ? Math.pow(1 - (size / maxFreq), targetProximityStrength / 4) : 1;
         
+        // Calculate neighbor proximity inversely to the number of connections
         let neighborProximity = 1;
         if (neighborsDict[word]) {
             neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
         }
         
+        // Combine proximities
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
     
         const scale = 10;
@@ -161,6 +166,7 @@ function generateGraph() {
         nodeMap.set(word, node);
     });
     
+    // Ensure the target word is positioned at the origin
     const targetNode = nodeMap.get(targetWord);
     if (targetNode) {
         targetNode.x = 0;
@@ -182,9 +188,7 @@ function generateGraph() {
                 title: 'Word Frequency'
             }
         },
-        type: 'scatter3d',
-        customdata: nodes.map(node => node.word),
-        hoverinfo: 'text'
+        type: 'scatter3d'
     };
 
     const edgeTrace = {
@@ -220,43 +224,9 @@ function generateGraph() {
     };
 
     Plotly.newPlot('graph', [edgeTrace, nodeTrace], layout);
-
-    document.getElementById('graph').on('plotly_click', function(data) {
-        const clickedWord = data.points[0].customdata;
-        const filteredEdges = edges.filter(edge => edge.includes(clickedWord));
-        const connectedWords = new Set(filteredEdges.flat());
-
-        const filteredNodes = nodes.filter(node => connectedWords.has(node.word));
-        const filteredNodeTrace = {
-            ...nodeTrace,
-            x: filteredNodes.map(node => node.x),
-            y: filteredNodes.map(node => node.y),
-            z: filteredNodes.map(node => node.z),
-            text: filteredNodes.map(node => node.text),
-            customdata: filteredNodes.map(node => node.word)
-        };
-
-        const filteredEdgeTrace = {
-            ...edgeTrace,
-            x: [],
-            y: [],
-            z: []
-        };
-
-        filteredEdges.forEach(([from, to]) => {
-            const fromNode = nodeMap.get(from);
-            const toNode = nodeMap.get(to);
-            if (fromNode && toNode) {
-                filteredEdgeTrace.x.push(fromNode.x, toNode.x, null);
-                filteredEdgeTrace.y.push(fromNode.y, toNode.y, null);
-                filteredEdgeTrace.z.push(fromNode.z, toNode.z, null);
-            }
-        });
-
-        Plotly.react('graph', [filteredEdgeTrace, filteredNodeTrace], layout);
-    });
 }
 
+// Update display values for sliders
 document.getElementById('neighborWeight').addEventListener('input', function() {
     document.getElementById('neighborWeightValue').textContent = this.value;
 });
