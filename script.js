@@ -154,7 +154,7 @@ function generateGraph() {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
         
         // Calculate target proximity for all words
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength);
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
         
         // Calculate neighbor proximity inversely
         let neighborProximity = 1;
