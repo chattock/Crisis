@@ -73,7 +73,7 @@ function generateGraph() {
     const fullText = journalData.map(item => item.fullText).join(' ');
     let tokens = fullText.toLowerCase().split(/\W+/);
 
-    // Filter out common words before processing
+    // Filter out common words
     tokens = tokens.filter(word => !commonWords.has(word));
 
     const relatedWords = [];
@@ -140,10 +140,10 @@ function generateGraph() {
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
         
-        // Calculate target proximity only for the target word
-        const targetProximity = word === targetWord ? Math.pow(1 - (size / maxFreq), targetProximityStrength / 4) : 1;
+        // Calculate target proximity for all words
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength);
         
-        // Calculate neighbor proximity inversely to the number of connections
+        // Calculate neighbor proximity inversely
         let neighborProximity = 1;
         if (neighborsDict[word]) {
             neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
@@ -151,7 +151,7 @@ function generateGraph() {
         
         // Combine proximities
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
-    
+
         const scale = 10;
         const node = {
             x: (Math.random() - 0.5) * combinedProximity * scale,
@@ -165,7 +165,7 @@ function generateGraph() {
         nodes.push(node);
         nodeMap.set(word, node);
     });
-    
+
     // Ensure the target word is positioned at the origin
     const targetNode = nodeMap.get(targetWord);
     if (targetNode) {
