@@ -47,6 +47,11 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <input type="text" id="targetWord" value="crisis">
         <p>Enter the main word you want to analyze. The graph will highlight relationships with this word.</p>
 
+        <label for="contextWindowSize">Context Window Size:</label>
+        <input type="range" id="contextWindowSize" min="1" max="20" step="1" value="5">
+        <span id="contextWindowSizeValue">5</span>
+        <p>Adjust the number of words considered around the target word and its neighbors.</p>
+
         <label for="topWordsCount">Top Words count Related to Target Word:</label>
         <input type="number" id="topWordsCount" value="50" min="1">
         <p>Specify how many top related words to display. This helps to focus on the most relevant connections.</p>
@@ -58,7 +63,7 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
 
         <label for="neighborsCount">Neighbors Count:</label>
         <input type="number" id="neighborsCount" value="0" min="1">
-        <p>This determines how many nearby words are considered around the most frequent words. It helps visualize connections by focusing on the most relevant neighbors next to the target word.</p>
+        <p>This determines how many nearby words are considered around the most frequent words. It helps visualize connections by focusing on the most common neighbors of the target word's most frequent neighbours</p>
 
         <label for="neighborWeight">Neighbor Weight:</label>
         <input type="range" id="neighborWeight" min="-1" max="1" step="0.1" value="0">

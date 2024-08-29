@@ -59,6 +59,18 @@ function getCommonWords() {
     return new Set(textAreaValue.split(',').map(word => word.trim()));
 }
 
+document.getElementById('contextWindowSize').addEventListener('input', function() {
+    document.getElementById('contextWindowSizeValue').textContent = this.value;
+});
+
+document.getElementById('neighborWeight').addEventListener('input', function() {
+    document.getElementById('neighborWeightValue').textContent = this.value;
+});
+
+document.getElementById('targetProximityStrength').addEventListener('input', function() {
+    document.getElementById('targetProximityStrengthValue').textContent = this.value;
+});
+
 function generateGraph() {
     const targetWord = document.getElementById('targetWord').value;
     const topWordsCount = parseInt(document.getElementById('topWordsCount').value);
@@ -68,6 +80,7 @@ function generateGraph() {
 
     const neighborWeight = parseFloat(document.getElementById('neighborWeight').value);
     const targetProximityStrength = parseFloat(document.getElementById('targetProximityStrength').value);
+    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
 
     const journalData = data.filter(item => item.isPartOf === selectedJournal);
     const fullText = journalData.map(item => item.fullText).join(' ');
@@ -81,8 +94,8 @@ function generateGraph() {
 
     tokens.forEach((word, i) => {
         if (word === targetWord) {
-            const start = Math.max(i - 5, 0);
-            const end = Math.min(i + 6, tokens.length);
+            const start = Math.max(i - contextWindowSize, 0);
+            const end = Math.min(i + contextWindowSize + 1, tokens.length);
             const context = tokens.slice(start, i).concat(tokens.slice(i + 1, end));
             relatedWords.push(...context);
 
@@ -225,12 +238,3 @@ function generateGraph() {
 
     Plotly.newPlot('graph', [edgeTrace, nodeTrace], layout);
 }
-
-// Update display values for sliders
-document.getElementById('neighborWeight').addEventListener('input', function() {
-    document.getElementById('neighborWeightValue').textContent = this.value;
-});
-
-document.getElementById('targetProximityStrength').addEventListener('input', function() {
-    document.getElementById('targetProximityStrengthValue').textContent = this.value;
-});
