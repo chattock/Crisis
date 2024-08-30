@@ -215,16 +215,16 @@ function generateGraph() {
 
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
-        
+
         // Calculate target proximity for all words
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
-        
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength / 4);
+
         // Calculate neighbor proximity inversely
         let neighborProximity = 1;
         if (neighborsDict[word]) {
             neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
         }
-        
+
         // Combine proximities
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
 
@@ -303,75 +303,77 @@ function generateGraph() {
     Plotly.newPlot('graph', [edgeTrace, nodeTrace], layout);
 
     document.getElementById('graph').on('plotly_click', function(data) {
-        const clickedNode = data.points[0].text.split(':')[0];
-        const clickedEdges = edges.filter(edge => edge.includes(clickedNode));
-        const neighborNodes = new Set();
+        if (data.points[0].curveNumber === 1) { // Check if clicked on a node
+            const clickedNode = data.points[0].text.split(':')[0];
+            const clickedEdges = edges.filter(edge => edge.includes(clickedNode));
+            const neighborNodes = new Set();
 
-        clickedEdges.forEach(([from, to]) => {
-            if (from !== targetWord && from !== clickedNode) neighborNodes.add(from);
-            if (to !== targetWord && to !== clickedNode) neighborNodes.add(to);
-        });
+            clickedEdges.forEach(([from, to]) => {
+                if (from !== targetWord && from !== clickedNode) neighborNodes.add(from);
+                if (to !== targetWord && to !== clickedNode) neighborNodes.add(to);
+            });
 
-        const filteredEdges = clickedEdges.filter(edge => 
-            edge.includes(targetWord) || edge.includes(clickedNode)
-        );
+            const filteredEdges = clickedEdges.filter(edge => 
+                edge.includes(targetWord) || edge.includes(clickedNode)
+            );
 
-        const filteredNodes = [targetWord, clickedNode, ...neighborNodes];
+            const filteredNodes = [targetWord, clickedNode, ...neighborNodes];
 
-        const newNodes = nodes.filter(node => filteredNodes.includes(node.word));
-        const newEdges = [];
+            const newNodes = nodes.filter(node => filteredNodes.includes(node.word));
+            const newEdges = [];
 
-        filteredEdges.forEach(([from, to]) => {
-            const fromNode = nodeMap.get(from);
-            const toNode = nodeMap.get(to);
-            if (fromNode && toNode) {
-                newEdges.push([fromNode, toNode]);
-            }
-        });
-
-        const newEdgeTrace = {
-            x: [],
-            y: [],
-            z: [],
-            mode: 'lines',
-            line: {
-                width: 0.5,
-                color: '#888'
-            },
-            type: 'scatter3d'
-        };
-
-        newEdges.forEach(([fromNode, toNode]) => {
-            newEdgeTrace.x.push(fromNode.x, toNode.x, null);
-            newEdgeTrace.y.push(fromNode.y, toNode.y, null);
-            newEdgeTrace.z.push(fromNode.z, toNode.z, null);
-        });
-
-        const newLayout = {
-            title: `3D Network Graph for "${selectedJournal}"`,
-            margin: { l: 0, r: 0, b: 0, t: 0 },
-            scene: {
-                xaxis: { showbackground: false },
-                yaxis: { showbackground: false },
-                zaxis: { showbackground: false }
-            }
-        };
-
-        Plotly.newPlot('graph', [newEdgeTrace, {
-            x: newNodes.map(node => node.x),
-            y: newNodes.map(node => node.y),
-            z: newNodes.map(node => node.z),
-            text: newNodes.map(node => node.text),
-            mode: 'markers+text',
-            marker: {
-                size: 10,
-                color: newNodes.map(node => node.color),
-                colorscale: 'YlGnBu',
-                colorbar: {
-                    title: 'Word Frequency'
+            filteredEdges.forEach(([from, to]) => {
+                const fromNode = nodeMap.get(from);
+                const toNode = nodeMap.get(to);
+                if (fromNode && toNode) {
+                    newEdges.push([fromNode, toNode]);
                 }
-            },
-            type: 'scatter3d'
-        }], newLayout);
+            });
+
+            const newEdgeTrace = {
+                x: [],
+                y: [],
+                z: [],
+                mode: 'lines',
+                line: {
+                    width: 0.5,
+                    color: '#888'
+                },
+                type: 'scatter3d'
+            };
+
+            newEdges.forEach(([fromNode, toNode]) => {
+                newEdgeTrace.x.push(fromNode.x, toNode.x, null);
+                newEdgeTrace.y.push(fromNode.y, toNode.y, null);
+                newEdgeTrace.z.push(fromNode.z, toNode.z, null);
+            });
+
+            const newLayout = {
+                title: `3D Network Graph for "${selectedJournal}"`,
+                margin: { l: 0, r: 0, b: 0, t: 0 },
+                scene: {
+                    xaxis: { showbackground: false },
+                    yaxis: { showbackground: false },
+                    zaxis: { showbackground: false }
+                }
+            };
+
+            Plotly.newPlot('graph', [newEdgeTrace, {
+                x: newNodes.map(node => node.x),
+                y: newNodes.map(node => node.y),
+                z: newNodes.map(node => node.z),
+                text: newNodes.map(node => node.text),
+                mode: 'markers+text',
+                marker: {
+                    size: 10,
+                    color: newNodes.map(node => node.color),
+                    colorscale: 'YlGnBu',
+                    colorbar: {
+                        title: 'Word Frequency'
+                    }
+                },
+                type: 'scatter3d'
+            }], newLayout);
+        }
     });
 }
