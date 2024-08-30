@@ -1,5 +1,6 @@
 let data = [];
 let journals = [];
+let tokens = []; // Global variable for storing tokens
 
 // Preload the JSONL file
 document.addEventListener("DOMContentLoaded", () => {
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             populateJournalSelect();
-            generateGraph(); // Automatically generate the graph
+            generateGraph();
         })
         .catch(error => console.error('Error loading JSONL file:', error));
 });
@@ -71,8 +72,69 @@ document.getElementById('targetProximityStrength').addEventListener('input', fun
     document.getElementById('targetProximityStrengthValue').textContent = this.value;
 });
 
+function populateNeighborSelect(topWords) {
+    const neighborSelect = document.getElementById('neighborSelect');
+    neighborSelect.innerHTML = ''; // Clear existing options
+    topWords.forEach(([word]) => {
+        const option = document.createElement('option');
+        option.value = word;
+        option.textContent = word;
+        neighborSelect.appendChild(option);
+    });
+}
+
+function calculatePMI(word1, word2, tokens, contextWindowSize) {
+    const totalTokens = tokens.length;
+
+    // Calculate frequencies of individual words
+    const freqWord1 = tokens.filter(word => word === word1).length;
+    const freqWord2 = tokens.filter(word => word === word2).length;
+
+    // Calculate the co-occurrence of the two words within the context window
+    let coOccurrence = 0;
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i] === word1) {
+            const start = Math.max(i - contextWindowSize, 0);
+            const end = Math.min(i + contextWindowSize + 1, tokens.length);
+            if (tokens.slice(start, end).includes(word2)) {
+                coOccurrence++;
+            }
+        }
+    }
+
+    // Calculate probabilities
+    const P_x = freqWord1 / totalTokens;
+    const P_y = freqWord2 / totalTokens;
+    const P_xy = coOccurrence / totalTokens;
+
+    // Handle edge cases where probabilities might be zero
+    if (P_x === 0 || P_y === 0 || P_xy === 0 || isNaN(P_xy)) {
+        return Number.NEGATIVE_INFINITY;
+    }
+
+    // Calculate PMI
+    const pmi = Math.log2(P_xy / (P_x * P_y));
+
+    return pmi;
+}
+
+function displayPMI() {
+    const targetWord = document.getElementById('targetWord').value;
+    const selectedNeighbor = document.getElementById('neighborSelect').value;
+    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
+    const pmi = calculatePMI(targetWord, selectedNeighbor, tokens, contextWindowSize);
+
+    const pmiResult = document.getElementById('pmiResult');
+    if (pmi === Number.NEGATIVE_INFINITY) {
+        pmiResult.textContent = `PMI between "${targetWord}" and "${selectedNeighbor}" could not be calculated (probabilities are zero or no co-occurrence found).`;
+    } else {
+        pmiResult.textContent = `PMI between "${targetWord}" and "${selectedNeighbor}": ${pmi.toFixed(4)}`;
+    }
+}
+
 function generateGraph() {
     const targetWord = document.getElementById('targetWord').value;
+    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
     const topWordsCount = parseInt(document.getElementById('topWordsCount').value);
     const neighborsCount = parseInt(document.getElementById('neighborsCount').value);
     const selectedJournal = document.getElementById('journalSelect').value;
@@ -80,11 +142,10 @@ function generateGraph() {
 
     const neighborWeight = parseFloat(document.getElementById('neighborWeight').value);
     const targetProximityStrength = parseFloat(document.getElementById('targetProximityStrength').value);
-    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
 
     const journalData = data.filter(item => item.isPartOf === selectedJournal);
     const fullText = journalData.map(item => item.fullText).join(' ');
-    let tokens = fullText.toLowerCase().split(/\W+/);
+    tokens = fullText.toLowerCase().split(/\W+/); // Make tokens a global variable
 
     // Filter out common words
     tokens = tokens.filter(word => !commonWords.has(word));
@@ -116,6 +177,8 @@ function generateGraph() {
     const topWords = Object.entries(wordFreq)
         .sort((a, b) => b[1] - a[1])
         .slice(0, topWordsCount);
+
+    populateNeighborSelect(topWords);
 
     const G = new Map();
     G.set(targetWord, wordFreq[targetWord] || 1);

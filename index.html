@@ -80,6 +80,21 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
             <div id="graph"></div>
         </div>
     </section>
+
+    <section>
+        <h2>Calculate PMI</h2>
+        <p>
+            <strong>Pointwise Mutual Information (PMI)</strong> is a statistical measure used to assess the strength of association between two words. It compares the probability of two words appearing together (co-occurrence) to the probability of them appearing independently of each other. A higher PMI value indicates that the two words co-occur more often than would be expected by chance, suggesting a strong association between them. Conversely, a lower or negative PMI value suggests that the words co-occur less often than expected, indicating a weak or no association. PMI helps reveal meaningful connections between words in a text, beyond simple frequency counts.
+        </p>
+        <label for="neighborSelect">Select Neighboring Word:</label>
+        <select id="neighborSelect">
+            <!-- Options will be populated dynamically -->
+        </select>
+        <button class="btn btn-color-1" onclick="displayPMI()">Calculate PMI</button>
+        <p id="pmiResult"></p>
+    </section>
+
+
 </main>
 
 <footer>
