@@ -12,7 +12,7 @@
 
 <header>
     <h1>Network Graph Visualization</h1>
-    <p>This tool allows you to visualize relationships between words in a network graph format, providing insights into data patterns. Click the Button below to download data that can be used for this website. This website works when using data from https://constellate.org/ when the full text is requested </p>
+    <p>This tool allows you to visualize relationships between words in a network graph format, providing insights into data patterns. Click the Button below to download data that can be used for this website. This website works when using data from https://constellate.org/ when the full text is requested in JsonL format</p>
 </header>
 <section>
     <button class="btn btn-color-1" onclick="window.open('https://www.dropbox.com/scl/fi/56g0fpuhs7kqcbbo504xs/part-1.jsonl?rlkey=t12galcfufa6bie9cnt6ahjrz&st=hv8mz3rg&dl=1')">downlaod data</button>
@@ -68,7 +68,7 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <label for="neighborWeight">Neighbor Weight:</label>
         <input type="range" id="neighborWeight" min="-1" max="1" step="0.1" value="0">
         <span id="neighborWeightValue">0</span>
-        <p>Adjust the influence of neighboring words. A higher weight places more connected neighbours closer to eachother.</p>
+        <p>Adjust the influence of neighboring words. A higher weight places words connected to more neighbours closer to eachother. Putting this at a negative value helps to highlight the words with the most connections by pushing them to the outskirts of the graph.</p>
     </section>
 
     <div class="btn-container">
@@ -84,7 +84,13 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
     <section>
         <h2>Calculate PMI</h2>
         <p>
-            <strong>Pointwise Mutual Information (PMI)</strong> is a statistical measure used to assess the strength of association between two words. It compares the probability of two words appearing together (co-occurrence) to the probability of them appearing independently of each other. A higher PMI value indicates that the two words co-occur more often than would be expected by chance, suggesting a strong association between them. Conversely, a lower or negative PMI value suggests that the words co-occur less often than expected, indicating a weak or no association. PMI helps reveal meaningful connections between words in a text, beyond simple frequency counts.
+            <strong>Pointwise Mutual Information (PMI)</strong> is a statistical measure used to assess the strength of association between two words. It compares the probability of two words appearing together (co-occurrence) to the probability of them appearing independently of each other. A higher PMI value indicates that the two words co-occur more often than would be expected by chance, suggesting a strong association between them. Conversely, a lower or negative PMI value suggests that the words co-occur less often than expected, indicating a weak or no association. PMI helps reveal meaningful connections between words in a text, beyond simple frequency counts. the window for words to coexist together when calculating PMI is determined by the contextWindowSize variable. 
+        </p>
+        <p>
+            The formula for PMI between two words \(x\) and \(y\) is:
+        </p>
+        <p>
+            <code>PMI(x, y) = log2(P(x, y) / (P(x) * P(y)))</code>
         </p>
         <p>
             Select neighboring words from the dropdown list to calculate the PMI value with the target word. The PMI value will be displayed below.

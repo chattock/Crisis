@@ -1,6 +1,9 @@
 let data = [];
 let journals = [];
-let tokens = []; // Global variable for storing tokens
+let tokens = [];
+let initialNodes = [];
+let initialEdges = [];
+let initialLayout = {};
 
 // Preload the JSONL file
 document.addEventListener("DOMContentLoaded", () => {
@@ -46,7 +49,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
 function populateJournalSelect() {
     const journalSelect = document.getElementById('journalSelect');
-    journalSelect.innerHTML = ''; // Clear existing options
+    journalSelect.innerHTML = '';
     journals.forEach(journal => {
         const option = document.createElement('option');
         option.value = journal;
@@ -74,7 +77,7 @@ document.getElementById('targetProximityStrength').addEventListener('input', fun
 
 function populateNeighborSelect(topWords) {
     const neighborSelect = document.getElementById('neighborSelect');
-    neighborSelect.innerHTML = ''; // Clear existing options
+    neighborSelect.innerHTML = '';
     topWords.forEach(([word]) => {
         const option = document.createElement('option');
         option.value = word;
@@ -85,12 +88,9 @@ function populateNeighborSelect(topWords) {
 
 function calculatePMI(word1, word2, tokens, contextWindowSize) {
     const totalTokens = tokens.length;
-
-    // Calculate frequencies of individual words
     const freqWord1 = tokens.filter(word => word === word1).length;
     const freqWord2 = tokens.filter(word => word === word2).length;
 
-    // Calculate the co-occurrence of the two words within the context window
     let coOccurrence = 0;
     for (let i = 0; i < tokens.length; i++) {
         if (tokens[i] === word1) {
@@ -102,19 +102,15 @@ function calculatePMI(word1, word2, tokens, contextWindowSize) {
         }
     }
 
-    // Calculate probabilities
     const P_x = freqWord1 / totalTokens;
     const P_y = freqWord2 / totalTokens;
     const P_xy = coOccurrence / totalTokens;
 
-    // Handle edge cases where probabilities might be zero
     if (P_x === 0 || P_y === 0 || P_xy === 0 || isNaN(P_xy)) {
         return Number.NEGATIVE_INFINITY;
     }
 
-    // Calculate PMI
     const pmi = Math.log2(P_xy / (P_x * P_y));
-
     return pmi;
 }
 
@@ -145,9 +141,8 @@ function generateGraph() {
 
     const journalData = data.filter(item => item.isPartOf === selectedJournal);
     const fullText = journalData.map(item => item.fullText).join(' ');
-    tokens = fullText.toLowerCase().split(/\W+/); // Make tokens a global variable
+    tokens = fullText.toLowerCase().split(/\W+/);
 
-    // Filter out common words
     tokens = tokens.filter(word => !commonWords.has(word));
 
     const relatedWords = [];
@@ -216,16 +211,11 @@ function generateGraph() {
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
 
-        // Calculate target proximity for all words
         const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength / 4);
-
-        // Calculate neighbor proximity inversely
         let neighborProximity = 1;
         if (neighborsDict[word]) {
             neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
         }
-
-        // Combine proximities
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
 
         const scale = 10;
@@ -233,7 +223,7 @@ function generateGraph() {
             x: (Math.random() - 0.5) * combinedProximity * scale,
             y: (Math.random() - 0.5) * combinedProximity * scale,
             z: (Math.random() - 0.5) * combinedProximity * scale,
-            text: `${word}: ${size}`,
+            text: size > 1 ? `${word}: ${size}` : word,
             size: 10,
             word: word,
             color: size
@@ -242,13 +232,50 @@ function generateGraph() {
         nodeMap.set(word, node);
     });
 
-    // Ensure the target word is positioned at the origin
     const targetNode = nodeMap.get(targetWord);
     if (targetNode) {
-        targetNode.x = 0;
-        targetNode.y = 0;
-        targetNode.z = 0;
+        targetNode.x = 0.5;
+        targetNode.y = 0.5;
+        targetNode.z = 0.5;
     }
+
+    initialNodes = nodes.map(node => ({ ...node }));
+    initialEdges = [...edges];
+
+    // Calculate axis ranges
+    const xValues = nodes.map(node => node.x);
+    const yValues = nodes.map(node => node.y);
+    const zValues = nodes.map(node => node.z);
+
+    const xRange = [Math.min(...xValues) - 1, Math.max(...xValues) + 1];
+    const yRange = [Math.min(...yValues) - 1, Math.max(...yValues) + 1];
+    const zRange = [Math.min(...zValues) - 1, Math.max(...zValues) + 1];
+
+    // Ensure minimum range of [-5, 5]
+    const minRange = [-5, 5];
+    const adjustedXRange = [
+        Math.min(minRange[0], xRange[0]),
+        Math.max(minRange[1], xRange[1])
+    ];
+    const adjustedYRange = [
+        Math.min(minRange[0], yRange[0]),
+        Math.max(minRange[1], yRange[1])
+    ];
+    const adjustedZRange = [
+        Math.min(minRange[0], zRange[0]),
+        Math.max(minRange[1], zRange[1])
+    ];
+
+    initialLayout = {
+        title: `3D Network Graph for "${selectedJournal}"`,
+        margin: { l: 0, r: 0, b: 0, t: 0 },
+        scene: {
+            xaxis: { range: adjustedXRange, showbackground: false },
+            yaxis: { range: adjustedYRange, showbackground: false },
+            zaxis: { range: adjustedZRange, showbackground: false }
+        },
+        showlegend: false
+    };
 
     const nodeTrace = {
         x: nodes.map(node => node.x),
@@ -261,7 +288,8 @@ function generateGraph() {
             color: nodes.map(node => node.color),
             colorscale: 'YlGnBu',
             colorbar: {
-                title: 'Word Frequency'
+                title: 'Frequency to target word',
+                len: 0.8,
             }
         },
         type: 'scatter3d',
@@ -290,22 +318,12 @@ function generateGraph() {
         }
     });
 
-    const layout = {
-        title: `3D Network Graph for "${selectedJournal}"`,
-        margin: { l: 0, r: 0, b: 0, t: 0 },
-        scene: {
-            xaxis: { showbackground: false },
-            yaxis: { showbackground: false },
-            zaxis: { showbackground: false }
-        }
-    };
-
-    Plotly.newPlot('graph', [edgeTrace, nodeTrace], layout);
+    Plotly.newPlot('graph', [edgeTrace, nodeTrace], initialLayout);
 
     document.getElementById('graph').on('plotly_click', function(data) {
-        if (data.points[0].curveNumber === 1) { // Check if clicked on a node
+        if (data.points[0].curveNumber === 1) {
             const clickedNode = data.points[0].text.split(':')[0];
-            const clickedEdges = edges.filter(edge => edge.includes(clickedNode));
+            const clickedEdges = initialEdges.filter(edge => edge.includes(clickedNode));
             const neighborNodes = new Set();
 
             clickedEdges.forEach(([from, to]) => {
@@ -318,8 +336,7 @@ function generateGraph() {
             );
 
             const filteredNodes = [targetWord, clickedNode, ...neighborNodes];
-
-            const newNodes = nodes.filter(node => filteredNodes.includes(node.word));
+            const newNodes = initialNodes.filter(node => filteredNodes.includes(node.word));
             const newEdges = [];
 
             filteredEdges.forEach(([from, to]) => {
@@ -348,16 +365,6 @@ function generateGraph() {
                 newEdgeTrace.z.push(fromNode.z, toNode.z, null);
             });
 
-            const newLayout = {
-                title: `3D Network Graph for "${selectedJournal}"`,
-                margin: { l: 0, r: 0, b: 0, t: 0 },
-                scene: {
-                    xaxis: { showbackground: false },
-                    yaxis: { showbackground: false },
-                    zaxis: { showbackground: false }
-                }
-            };
-
             Plotly.newPlot('graph', [newEdgeTrace, {
                 x: newNodes.map(node => node.x),
                 y: newNodes.map(node => node.y),
@@ -369,11 +376,12 @@ function generateGraph() {
                     color: newNodes.map(node => node.color),
                     colorscale: 'YlGnBu',
                     colorbar: {
-                        title: 'Word Frequency'
+                        title: 'Frequency to target word',
+                        len: 0.8,
                     }
                 },
                 type: 'scatter3d'
-            }], newLayout);
+            }], initialLayout);
         }
     });
 }
