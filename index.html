@@ -48,7 +48,7 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <p>Enter the main word you want to analyze. The graph will highlight relationships with this word.</p>
 
         <label for="contextWindowSize">Context Window Size:</label>
-        <input type="range" id="contextWindowSize" min="1" max="20" step="1" value="5">
+        <input type="range" id="contextWindowSize" min="1" max="50" step="1" value="5">
         <span id="contextWindowSizeValue">5</span>
         <p>The Context Window Size defines the range of words surrounding each occurrence of the target word that are analyzed for potential relationships. This setting allows you to specify how many words before and after the target word should be included in the analysis, (this includes the context window of neighbours).</p>
 
@@ -98,8 +98,12 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <select id="neighborSelect">
             <!-- Options will be populated dynamically -->
         </select>
-        <button class="btn btn-color-1" onclick="displayPMI()">Calculate PMI</button>
+        <button id="calculatePMIButton" class="btn btn-color-1">Calculate PMI</button>
         <p id="pmiResult"></p>
+
+        <p>This button calculates the relative probability of the selected neighbor word appearing near the target word within the context window size.</p>
+        <button id="calculateProbabilityGraph" class="btn btn-color-1">Calculate Relative Position Probability</button>
+        <div id="probabilityGraph"></div>
     </section>
 
 

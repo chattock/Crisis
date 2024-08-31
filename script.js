@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             populateJournalSelect();
             generateGraph();
+            generateProbabilityGraph();
         })
         .catch(error => console.error('Error loading JSONL file:', error));
 });
@@ -288,8 +289,10 @@ function generateGraph() {
             color: nodes.map(node => node.color),
             colorscale: 'YlGnBu',
             colorbar: {
-                title: 'Frequency to target word',
-                len: 0.8,
+                title: {
+                    text: 'Frequency to target word',
+                },
+                len: 0.8
             }
         },
         type: 'scatter3d',
@@ -376,12 +379,62 @@ function generateGraph() {
                     color: newNodes.map(node => node.color),
                     colorscale: 'YlGnBu',
                     colorbar: {
-                        title: 'Frequency to target word',
-                        len: 0.8,
+                        title: {
+                            text: 'Frequency to target word',
+                        },
+                        len: 0.8
                     }
                 },
                 type: 'scatter3d'
             }], initialLayout);
         }
     });
+}
+
+document.getElementById('calculatePMIButton').addEventListener('click', function() {
+    displayPMI();
+});
+
+document.getElementById('calculateProbabilityGraph').addEventListener('click', function() {
+    generateProbabilityGraph();
+});
+
+function generateProbabilityGraph() {
+    const targetWord = document.getElementById('targetWord').value;
+    const selectedNeighbor = document.getElementById('neighborSelect').value;
+    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
+
+    const totalTokens = tokens.length;
+    const positionCounts = Array(contextWindowSize * 2 + 1).fill(0);
+
+    for (let i = 0; i < totalTokens; i++) {
+        if (tokens[i] === targetWord) {
+            const start = Math.max(i - contextWindowSize, 0);
+            const end = Math.min(i + contextWindowSize + 1, totalTokens);
+
+            for (let j = start; j < end; j++) {
+                if (tokens[j] === selectedNeighbor && j !== i) {
+                    const relativePosition = j - i + contextWindowSize;
+                    positionCounts[relativePosition]++;
+                }
+            }
+        }
+    }
+
+    const probabilities = positionCounts.map(count => count / totalTokens);
+    const xValues = Array.from({ length: contextWindowSize * 2 + 1 }, (_, idx) => idx - contextWindowSize);
+
+    const trace = {
+        x: xValues,
+        y: probabilities,
+        type: 'line'
+    };
+
+    const layout = {
+        title: `Relative Probability of "${targetWord}" and "${selectedNeighbor}" Co-Associating`,
+        xaxis: { title: 'Position Relative to Target Word' },
+        yaxis: { title: 'Probability' }
+    };
+
+    Plotly.newPlot('probabilityGraph', [trace], layout);
 }

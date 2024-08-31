@@ -227,6 +227,13 @@ input[type="file"] {
   display: none;
 }
 
+#calculateProbabilityGraph {
+    width: 12rem; /* Adjust the width as needed */
+}
+
+#pmiResult {
+    padding-top: 1rem; /* Adjust the padding as needed */
+}
 
 @media (max-width: 480px) {
   html {
