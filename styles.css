@@ -241,4 +241,7 @@ input[type="file"] {
     transform-origin: top left;
     height: 50%;
   }
+  header p {
+    max-width: 600px;
+}
 }
