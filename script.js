@@ -421,19 +421,18 @@ function generateProbabilityGraph() {
         }
     }
 
-    const probabilities = positionCounts.map(count => count / totalTokens);
     const xValues = Array.from({ length: contextWindowSize * 2 + 1 }, (_, idx) => idx - contextWindowSize);
 
     const trace = {
         x: xValues,
-        y: probabilities,
+        y: positionCounts,
         type: 'line'
     };
 
     const layout = {
-        title: `Relative Probability of "${targetWord}" and "${selectedNeighbor}" Co-Associating`,
+        title: `Count of "${selectedNeighbor}" Around "${targetWord}"`,
         xaxis: { title: 'Position Relative to Target Word' },
-        yaxis: { title: 'Probability' }
+        yaxis: { title: 'Count' }
     };
 
     Plotly.newPlot('probabilityGraph', [trace], layout);
