@@ -171,9 +171,16 @@ function calculatePMI(word1, word2, tokens, contextWindowSize) {
     return pmi;
 }
 
+function getSelectedNeighbor() {
+    const neighborSelect = document.getElementById('neighborSelect').value;
+    const neighborInput = document.getElementById('neighborInput').value.trim();
+    
+    return neighborInput || neighborSelect;
+}
+
 function displayPMI() {
     const targetWord = document.getElementById('targetWord').value;
-    const selectedNeighbor = document.getElementById('neighborSelect').value;
+    const selectedNeighbor = getSelectedNeighbor();
     const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
     const tokens = getTokensForSelectedJournal();
 
@@ -449,7 +456,7 @@ function generateGraph() {
 
 function generateProbabilityGraph() {
     const targetWord = document.getElementById('targetWord').value;
-    const selectedNeighbor = document.getElementById('neighborSelect').value;
+    const selectedNeighbor = getSelectedNeighbor();
     const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
     const tokens = getTokensForSelectedJournal();
 

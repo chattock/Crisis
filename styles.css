@@ -235,6 +235,10 @@ input[type="file"] {
     padding-top: 1rem; /* Adjust the padding as needed */
 }
 
+#calculatePMIButton {
+    margin-top: 2rem
+}
+
 @media (max-width: 480px) {
   html {
     transform: scale(0.48);

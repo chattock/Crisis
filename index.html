@@ -96,9 +96,12 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <p>
             Select neighboring words from the dropdown list to calculate the PMI value with the target word. The PMI value will be displayed below.
         </p>
-        <select id="neighborSelect">
-            <!-- Options will be populated dynamically -->
-        </select>
+        <div>
+            <select id="neighborSelect">
+                <!-- Options will be populated dynamically -->
+            </select>
+            <input type="text" id="neighborInput" placeholder="Or type a word">
+        </div>
         <button id="calculatePMIButton" class="btn btn-color-1">Calculate PMI</button>
         <p id="pmiResult"></p>
 
