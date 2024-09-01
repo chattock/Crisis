@@ -60,6 +60,13 @@ function populateJournalSelect() {
     });
 }
 
+function getTokensForSelectedJournal() {
+    const selectedJournal = document.getElementById('journalSelect').value;
+    const journalData = data.filter(item => item.isPartOf === selectedJournal);
+    const fullText = journalData.map(item => item.fullText).join(' ');
+    return fullText.toLowerCase().split(/\W+/);
+}
+
 function calculateRatio(text, wordCount, targetWord) {
     if (Array.isArray(text) && wordCount > 0) {
         const targetCount = text.reduce((acc, t) => acc + (t.toLowerCase().match(new RegExp(targetWord.toLowerCase(), 'g')) || []).length, 0);
@@ -101,7 +108,7 @@ function generateCrisisRatioGraph() {
         xaxis: { title: 'Year' },
         yaxis: { 
             title: `Mean Ratio of "${targetWord}"`,
-            tickformat: '.6f' // Format to display two decimal places
+            tickformat: '.6f'
         }
     };
 
@@ -168,6 +175,8 @@ function displayPMI() {
     const targetWord = document.getElementById('targetWord').value;
     const selectedNeighbor = document.getElementById('neighborSelect').value;
     const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
+    const tokens = getTokensForSelectedJournal();
+
     const pmi = calculatePMI(targetWord, selectedNeighbor, tokens, contextWindowSize);
 
     const pmiResult = document.getElementById('pmiResult');
@@ -292,7 +301,6 @@ function generateGraph() {
     initialNodes = nodes.map(node => ({ ...node }));
     initialEdges = [...edges];
 
-    // Calculate axis ranges
     const xValues = nodes.map(node => node.x);
     const yValues = nodes.map(node => node.y);
     const zValues = nodes.map(node => node.z);
@@ -301,7 +309,6 @@ function generateGraph() {
     const yRange = [Math.min(...yValues) - 1, Math.max(...yValues) + 1];
     const zRange = [Math.min(...zValues) - 1, Math.max(...zValues) + 1];
 
-    // Ensure minimum range of [-5, 5]
     const minRange = [-5, 5];
     const adjustedXRange = [
         Math.min(minRange[0], xRange[0]),
@@ -440,18 +447,11 @@ function generateGraph() {
     });
 }
 
-document.getElementById('calculatePMIButton').addEventListener('click', function() {
-    displayPMI();
-});
-
-document.getElementById('calculateProbabilityGraph').addEventListener('click', function() {
-    generateProbabilityGraph();
-});
-
 function generateProbabilityGraph() {
     const targetWord = document.getElementById('targetWord').value;
     const selectedNeighbor = document.getElementById('neighborSelect').value;
     const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
+    const tokens = getTokensForSelectedJournal();
 
     const totalTokens = tokens.length;
     const positionCounts = Array(contextWindowSize * 2 + 1).fill(0);
@@ -486,3 +486,6 @@ function generateProbabilityGraph() {
 
     Plotly.newPlot('probabilityGraph', [trace], layout);
 }
+
+document.getElementById('calculatePMIButton').addEventListener('click', displayPMI);
+document.getElementById('calculateProbabilityGraph').addEventListener('click', generateProbabilityGraph);
