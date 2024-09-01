@@ -228,15 +228,15 @@ input[type="file"] {
 }
 
 #calculateProbabilityGraph {
-    width: 12rem; /* Adjust the width as needed */
+    margin-bottom: 1rem;
+}
+
+#neighborInput {
+    margin-bottom: 1rem;
 }
 
 #pmiResult {
     padding-top: 1rem; /* Adjust the padding as needed */
-}
-
-#calculatePMIButton {
-    margin-top: 2rem
 }
 
 @media (max-width: 480px) {

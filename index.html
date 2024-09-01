@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -84,29 +86,33 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
 
     <section>
         <h2>Calculate PMI</h2>
-        <p>
-            <strong>Pointwise Mutual Information (PMI)</strong> is a statistical measure used to assess the strength of association between two words. It compares the probability of two words appearing together (co-occurrence) to the probability of them appearing independently of each other. A higher PMI value indicates that the two words co-occur more often than would be expected by chance, suggesting a strong association between them. Conversely, a lower or negative PMI value suggests that the words co-occur less often than expected, indicating a weak or no association. PMI helps reveal meaningful connections between words in a text, beyond simple frequency counts. the window for words to coexist together when calculating PMI is determined by the contextWindowSize variable. 
-        </p>
-        <p>
-            The formula for PMI between two words \(x\) and \(y\) is:
-        </p>
-        <p>
-            <code>PMI(x, y) = log2(P(x, y) / (P(x) * P(y)))</code>
-        </p>
-        <p>
-            Select neighboring words from the dropdown list to calculate the PMI value with the target word. The PMI value will be displayed below.
-        </p>
         <div>
             <select id="neighborSelect">
                 <!-- Options will be populated dynamically -->
             </select>
             <input type="text" id="neighborInput" placeholder="Or type a word">
         </div>
+        <p>
+        Pointwise Mutual Information (PMI) is a statistical measure used to assess the strength of association between two words. It compares the probability of two words appearing together to the probability of them appearing independently of each other. Select neighboring words from the dropdown list or type a word to calculate the PMI value with the target word. The PMI value will be displayed below.
+        </p>  
         <button id="calculatePMIButton" class="btn btn-color-1">Calculate PMI</button>
         <p id="pmiResult"></p>
-
+        <p>
+        A higher PMI value indicates that the two words co-occur more often than would be expected by chance, suggesting a strong association between them. The window for words to coexist together when calculating PMI is determined by the contextWindowSize variable. The formula for PMI between two words x and y is:
+        </p>
+        <p>
+            \[
+            \text{PMI}(x, y) = \log_2 \left( \frac{P(x, y)}{P(x) \times P(y)} \right)
+            \]
+        </p>
+        <p>
+        P(x) = n of Word1 only / totalWords;
+        P(y) = n of Word2 only / totalWords;
+        P(x,y) = word1 and word2 together / totalWords;
+        </p>  
+        <h2>Calculate Relative Position</h2>
         <p>This button displays how often the selected neighbor word appears in relation to the target word within the specified context window size.</p>
-        <button id="calculateProbabilityGraph" class="btn btn-color-1">Calculate Relative Position Probability</button>
+        <button id="calculateProbabilityGraph" class="btn btn-color-1">Generate Graph</button>
         <div id="probabilityGraph"></div>
     </section>
 
