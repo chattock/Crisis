@@ -15,7 +15,7 @@
     <p>This tool allows you to visualize relationships between words in a network graph format, providing insights into data patterns. Click the Button below to download data that can be used for this website. This website works when using data from https://constellate.org/ when the full text is requested in JsonL format</p>
 </header>
 <section>
-    <button class="btn btn-color-1" onclick="window.open('https://www.dropbox.com/scl/fi/56g0fpuhs7kqcbbo504xs/part-1.jsonl?rlkey=t12galcfufa6bie9cnt6ahjrz&st=hv8mz3rg&dl=1')">downlaod data</button>
+    <button class="btn btn-color-1" onclick="window.open('https://www.dropbox.com/scl/fi/56g0fpuhs7kqcbbo504xs/part-1.jsonl?rlkey=t12galcfufa6bie9cnt6ahjrz&st=hv8mz3rg&dl=1')">Download Data</button>
 </section>
 
 <main>
@@ -28,24 +28,25 @@
 
     <section>
         <h2>Select Journal</h2>
-        <select id="journalSelect">
-            <!-- Options will be populated dynamically -->
-        </select>
+        <select id="journalSelect"></select>
+        <label for="targetWord">Target Word:</label>
+        <input type="text" id="targetWord" value="crisis">
+        <p>Enter the main word you want to analyze. The graph will highlight relationships with this word.</p>
+        <h2>Generate Target word Ratio Graph</h2>
+        <button class="btn btn-color-1" onclick="generateCrisisRatioGraph()">Generate Graph</button>
         <p>Choose a journal from the list. This will filter the data specific to the selected journal.</p>
+        <div id="crisisRatioGraph" ></div>
     </section>
 
     <section>
+        <h2>Word tree</h2>
+        <p>build a graph to show connections between words</p>
+
         <h2>Remove Common Words</h2>
         <textarea id="commonWordsText" rows="10" cols="50">
 is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, be, has, have, was, were, are, can, will, would, should, could, a, this, that, these, those, there, their, they, them, he, as, she, his, her, him, i, you, we, us, our, your, ., ,, !, ?, :, ;, (, ), [, ], {, }, <, >, if, whether, while, although, ', which, had, ``, 's, not, '', -, when, 'the, during, its, p., over, such, led, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, q, w, e, r, t, y, u, i, o, p, a, s, d, f, g, h, j, k, l, z, x, c, v, b, n, m,
         </textarea>
         <p>Modify the list of common words to exclude from analysis. These words are typically non-informative.</p>
-    </section>
-
-    <section>
-        <label for="targetWord">Target Word:</label>
-        <input type="text" id="targetWord" value="crisis">
-        <p>Enter the main word you want to analyze. The graph will highlight relationships with this word.</p>
 
         <label for="contextWindowSize">Context Window Size:</label>
         <input type="range" id="contextWindowSize" min="1" max="100" step="1" value="5">

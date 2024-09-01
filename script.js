@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             populateJournalSelect();
+            generateCrisisRatioGraph();
             generateGraph();
             generateProbabilityGraph();
         })
@@ -57,6 +58,54 @@ function populateJournalSelect() {
         option.textContent = journal;
         journalSelect.appendChild(option);
     });
+}
+
+function calculateRatio(text, wordCount, targetWord) {
+    if (Array.isArray(text) && wordCount > 0) {
+        const targetCount = text.reduce((acc, t) => acc + (t.toLowerCase().match(new RegExp(targetWord.toLowerCase(), 'g')) || []).length, 0);
+        return targetCount / wordCount;
+    }
+    return 0;
+}
+
+function generateCrisisRatioGraph() {
+    const selectedJournal = document.getElementById('journalSelect').value;
+    const targetWord = document.getElementById('targetWord').value;
+    const journalData = data.filter(item => item.isPartOf === selectedJournal);
+
+    journalData.forEach(item => {
+        item.crisis_ratio = calculateRatio(item.fullText, item.wordCount, targetWord);
+    });
+
+    const crisisRatioByYear = journalData.reduce((acc, item) => {
+        if (!acc[item.publicationYear]) {
+            acc[item.publicationYear] = { sum: 0, count: 0 };
+        }
+        acc[item.publicationYear].sum += item.crisis_ratio;
+        acc[item.publicationYear].count++;
+        return acc;
+    }, {});
+
+    const years = Object.keys(crisisRatioByYear).sort();
+    const meanCrisisRatios = years.map(year => crisisRatioByYear[year].sum / crisisRatioByYear[year].count);
+
+    const trace = {
+        x: years,
+        y: meanCrisisRatios,
+        type: 'bar',
+        marker: { color: 'lightcoral' }
+    };
+
+    const layout = {
+        title: `Mean Ratio of "${targetWord}" Per Year for ${selectedJournal}`,
+        xaxis: { title: 'Year' },
+        yaxis: { 
+            title: `Mean Ratio of "${targetWord}"`,
+            tickformat: '.6f' // Format to display two decimal places
+        }
+    };
+
+    Plotly.newPlot('crisisRatioGraph', [trace], layout);
 }
 
 function getCommonWords() {
