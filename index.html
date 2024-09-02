@@ -74,8 +74,13 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
         <p>Adjust the influence of neighboring words. A higher weight places words connected to more neighbours closer to eachother. Putting this at a negative value helps to highlight the words with the most connections by pushing them to the outskirts of the graph.</p>
     </section>
 
+    <div class="checkbox-container">
+        <input type="checkbox" id="directConnectionsCheckbox" onclick="toggleGraphFunction()">
+        <label for="directConnectionsCheckbox">Only show direct connections to direct neighbours when clicking on words</label>
+    </div>
+
     <div class="btn-container">
-        <button class="btn btn-color-1" onclick="generateGraph()">Generate Graph</button>
+        <button id="generateBtn" class="btn btn-color-1" onclick="generateGraph()">Generate Graph</button>
     </div>
 
     <section>
@@ -83,6 +88,7 @@ is, to, the, for, and, with, in, of, on, at, by, from, as, an, it, or, if, but, 
             <div id="graph"></div>
         </div>
     </section>
+    <p>click on words to show connections to its neighbours more clearly</p>
 
     <section>
         <h2>Calculate PMI</h2>

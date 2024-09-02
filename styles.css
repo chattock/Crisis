@@ -239,6 +239,16 @@ input[type="file"] {
     padding-top: 1rem; /* Adjust the padding as needed */
 }
 
+.checkbox-container {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-container label {
+    margin-left: 5px;
+}
+
 @media (max-width: 480px) {
   html {
     transform: scale(0.48);

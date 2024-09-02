@@ -194,7 +194,7 @@ function displayPMI() {
     }
 }
 
-function generateGraph() {
+function generateOldGraph() {
     const targetWord = document.getElementById('targetWord').value;
     const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
     const topWordsCount = parseInt(document.getElementById('topWordsCount').value);
@@ -259,9 +259,8 @@ function generateGraph() {
             .slice(0, neighborsCount);
     
             neighbors.forEach(([neighbor, neighborFreq]) => {
-                // Ensure the neighbor frequency is correctly set
                 if (!G.has(neighbor)) {
-                    G.set(neighbor, neighborFreq); // Use neighborFreq instead of 1
+                    G.set(neighbor, neighborFreq);
                 }
                 if (neighborsDict[neighbor].includes(word)) {
                     edges.push([word, neighbor]);
@@ -269,8 +268,6 @@ function generateGraph() {
             });
         }
     });
-    
-    const maxFreq = Math.max(...Array.from(G.values()));
 
     const nodes = [];
     const nodeMap = new Map();
@@ -278,7 +275,7 @@ function generateGraph() {
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
 
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength / 4);
+        const targetProximity = Math.pow(1 - (size / wordFreq[targetWord]), targetProximityStrength / 4);
         let neighborProximity = 1;
         if (neighborsDict[word]) {
             neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
@@ -453,6 +450,283 @@ function generateGraph() {
             }], initialLayout);
         }
     });
+}
+
+function generateGraph() {
+    const targetWord = document.getElementById('targetWord').value;
+    const contextWindowSize = parseInt(document.getElementById('contextWindowSize').value);
+    const topWordsCount = parseInt(document.getElementById('topWordsCount').value);
+    const neighborsCount = parseInt(document.getElementById('neighborsCount').value);
+    const selectedJournal = document.getElementById('journalSelect').value;
+    const commonWords = getCommonWords();
+
+    const neighborWeight = parseFloat(document.getElementById('neighborWeight').value);
+    const targetProximityStrength = parseFloat(document.getElementById('targetProximityStrength').value);
+
+    const journalData = data.filter(item => item.isPartOf === selectedJournal);
+    const fullText = journalData.map(item => item.fullText).join(' ');
+    tokens = fullText.toLowerCase().split(/\W+/);
+
+    tokens = tokens.filter(word => !commonWords.has(word));
+
+    const relatedWords = [];
+    const neighborsDict = {};
+
+    tokens.forEach((word, i) => {
+        if (word === targetWord) {
+            const start = Math.max(i - contextWindowSize, 0);
+            const end = Math.min(i + contextWindowSize + 1, tokens.length);
+            const context = tokens.slice(start, i).concat(tokens.slice(i + 1, end));
+            relatedWords.push(...context);
+
+            context.forEach(relatedWord => {
+                if (!neighborsDict[relatedWord]) {
+                    neighborsDict[relatedWord] = [];
+                }
+                neighborsDict[relatedWord].push(...context.filter(w => w !== relatedWord));
+            });
+        }
+    });
+
+    const wordFreq = {};
+    relatedWords.forEach(word => {
+        wordFreq[word] = (wordFreq[word] || 0) + 1;
+    });
+
+    const topWords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, topWordsCount);
+
+    populateNeighborSelect(topWords);
+
+    const G = new Map();
+    G.set(targetWord, wordFreq[targetWord] || 1);
+
+    const edges = [];
+
+    topWords.forEach(([word, freq]) => {
+        G.set(word, freq);
+        edges.push([targetWord, word]);
+    
+        if (neighborsDict[word]) {
+            const neighbors = Object.entries(neighborsDict[word].reduce((acc, w) => {
+                acc[w] = (acc[w] || 0) + 1;
+                return acc;
+            }, {}))
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, neighborsCount);
+    
+            neighbors.forEach(([neighbor, neighborFreq]) => {
+                if (!G.has(neighbor)) {
+                    G.set(neighbor, neighborFreq);
+                }
+                if (neighborsDict[neighbor].includes(word)) {
+                    edges.push([word, neighbor]);
+                }
+            });
+        }
+    });
+
+    const nodes = [];
+    const nodeMap = new Map();
+
+    G.forEach((size, word) => {
+        const connectedEdges = edges.filter(edge => edge.includes(word)).length;
+
+        const targetProximity = Math.pow(1 - (size / wordFreq[targetWord]), targetProximityStrength / 4);
+        let neighborProximity = 1;
+        if (neighborsDict[word]) {
+            neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
+        }
+        const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
+
+        const scale = 10;
+        const node = {
+            x: (Math.random() - 0.5) * combinedProximity * scale,
+            y: (Math.random() - 0.5) * combinedProximity * scale,
+            z: (Math.random() - 0.5) * combinedProximity * scale,
+            text: word === targetWord ? word : `${word}: ${size}`,
+            size: 10,
+            word: word,
+            color: size
+        };
+        nodes.push(node);
+        nodeMap.set(word, node);
+    });
+
+    const targetNode = nodeMap.get(targetWord);
+    if (targetNode) {
+        targetNode.x = 0.5;
+        targetNode.y = 0.5;
+        targetNode.z = 0.5;
+    }
+
+    initialNodes = nodes.map(node => ({ ...node }));
+    initialEdges = [...edges];
+
+    const xValues = nodes.map(node => node.x);
+    const yValues = nodes.map(node => node.y);
+    const zValues = nodes.map(node => node.z);
+
+    const xRange = [Math.min(...xValues) - 1, Math.max(...xValues) + 1];
+    const yRange = [Math.min(...yValues) - 1, Math.max(...yValues) + 1];
+    const zRange = [Math.min(...zValues) - 1, Math.max(...zValues) + 1];
+
+    const minRange = [-5, 5];
+    const adjustedXRange = [
+        Math.min(minRange[0], xRange[0]),
+        Math.max(minRange[1], xRange[1])
+    ];
+    const adjustedYRange = [
+        Math.min(minRange[0], yRange[0]),
+        Math.max(minRange[1], yRange[1])
+    ];
+    const adjustedZRange = [
+        Math.min(minRange[0], zRange[0]),
+        Math.max(minRange[1], zRange[1])
+    ];
+
+    initialLayout = {
+        title: `  `,
+        margin: { l: 0, r: 0, b: 0, t: 0 },
+        scene: {
+            xaxis: { range: adjustedXRange, showbackground: false },
+            yaxis: { range: adjustedYRange, showbackground: false },
+            zaxis: { range: adjustedZRange, showbackground: false }
+        },
+        showlegend: false
+    };
+
+    const nodeTrace = {
+        x: nodes.map(node => node.x),
+        y: nodes.map(node => node.y),
+        z: nodes.map(node => node.z),
+        text: nodes.map(node => node.text),
+        mode: 'markers+text',
+        marker: {
+            size: 10,
+            color: nodes.map(node => node.color),
+            colorscale: 'YlGnBu',
+            colorbar: {
+                title: {
+                    text: 'Frequency to target word',
+                },
+                len: 0.8
+            }
+        },
+        type: 'scatter3d',
+        clickmode: 'event+select'
+    };
+
+    const edgeTrace = {
+        x: [],
+        y: [],
+        z: [],
+        mode: 'lines',
+        line: {
+            width: 0.5,
+            color: '#888'
+        },
+        type: 'scatter3d'
+    };
+
+    edges.forEach(([from, to]) => {
+        const fromNode = nodeMap.get(from);
+        const toNode = nodeMap.get(to);
+        if (fromNode && toNode) {
+            edgeTrace.x.push(fromNode.x, toNode.x, null);
+            edgeTrace.y.push(fromNode.y, toNode.y, null);
+            edgeTrace.z.push(fromNode.z, toNode.z, null);
+        }
+    });
+
+    Plotly.newPlot('graph', [edgeTrace, nodeTrace], initialLayout);
+
+    document.getElementById('graph').on('plotly_click', function(data) {
+        if (data.points[0].curveNumber === 1) {
+            const clickedNode = data.points[0].text.split(':')[0];
+            const visited = new Set();
+            const toExplore = [clickedNode];
+            const newNodes = new Set();
+            const newEdges = [];
+
+            while (toExplore.length > 0) {
+                const currentNode = toExplore.pop();
+                if (!visited.has(currentNode)) {
+                    visited.add(currentNode);
+                    newNodes.add(currentNode);
+
+                    initialEdges.forEach(([from, to]) => {
+                        if (from === currentNode || to === currentNode) {
+                            newEdges.push([from, to]);
+                            if ((from === currentNode && !visited.has(to) && to !== targetWord) || 
+                                (to === currentNode && !visited.has(from) && from !== targetWord)) {
+                                toExplore.push(from === currentNode ? to : from);
+                            }
+                        }
+                    });
+                }
+            }
+
+            newNodes.add(targetWord);
+
+            const finalNodes = initialNodes.filter(node => newNodes.has(node.word));
+            const finalEdges = newEdges.filter(([from, to]) => newNodes.has(from) && newNodes.has(to));
+
+            const newEdgeTrace = {
+                x: [],
+                y: [],
+                z: [],
+                mode: 'lines',
+                line: {
+                    width: 0.5,
+                    color: '#888'
+                },
+                type: 'scatter3d'
+            };
+
+            finalEdges.forEach(([from, to]) => {
+                const fromNode = nodeMap.get(from);
+                const toNode = nodeMap.get(to);
+                if (fromNode && toNode) {
+                    newEdgeTrace.x.push(fromNode.x, toNode.x, null);
+                    newEdgeTrace.y.push(fromNode.y, toNode.y, null);
+                    newEdgeTrace.z.push(fromNode.z, toNode.z, null);
+                }
+            });
+
+            Plotly.newPlot('graph', [newEdgeTrace, {
+                x: finalNodes.map(node => node.x),
+                y: finalNodes.map(node => node.y),
+                z: finalNodes.map(node => node.z),
+                text: finalNodes.map(node => node.text),
+                mode: 'markers+text',
+                marker: {
+                    size: 10,
+                    color: finalNodes.map(node => node.color),
+                    colorscale: 'YlGnBu',
+                    colorbar: {
+                        title: {
+                            text: 'Frequency to target word',
+                        },
+                        len: 0.8
+                    }
+                },
+                type: 'scatter3d'
+            }], initialLayout);
+        }
+    });
+}
+
+function toggleGraphFunction() {
+    const checkbox = document.getElementById('directConnectionsCheckbox');
+    const button = document.getElementById('generateBtn');
+    
+    if (checkbox.checked) {
+        button.setAttribute('onclick', 'generateOldGraph()');
+    } else {
+        button.setAttribute('onclick', 'generateGraph()');
+    }
 }
 
 function generateProbabilityGraph() {
