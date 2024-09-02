@@ -249,7 +249,7 @@ function generateGraph() {
     topWords.forEach(([word, freq]) => {
         G.set(word, freq);
         edges.push([targetWord, word]);
-
+    
         if (neighborsDict[word]) {
             const neighbors = Object.entries(neighborsDict[word].reduce((acc, w) => {
                 acc[w] = (acc[w] || 0) + 1;
@@ -257,10 +257,11 @@ function generateGraph() {
             }, {}))
             .sort((a, b) => b[1] - a[1])
             .slice(0, neighborsCount);
-
-            neighbors.forEach(([neighbor]) => {
+    
+            neighbors.forEach(([neighbor, neighborFreq]) => {
+                // Ensure the neighbor frequency is correctly set
                 if (!G.has(neighbor)) {
-                    G.set(neighbor, 1);
+                    G.set(neighbor, neighborFreq); // Use neighborFreq instead of 1
                 }
                 if (neighborsDict[neighbor].includes(word)) {
                     edges.push([word, neighbor]);
@@ -268,7 +269,7 @@ function generateGraph() {
             });
         }
     });
-
+    
     const maxFreq = Math.max(...Array.from(G.values()));
 
     const nodes = [];
@@ -289,7 +290,7 @@ function generateGraph() {
             x: (Math.random() - 0.5) * combinedProximity * scale,
             y: (Math.random() - 0.5) * combinedProximity * scale,
             z: (Math.random() - 0.5) * combinedProximity * scale,
-            text: size > 1 ? `${word}: ${size}` : word,
+            text: word === targetWord ? word : `${word}: ${size}`,
             size: 10,
             word: word,
             color: size
