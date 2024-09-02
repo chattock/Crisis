@@ -275,18 +275,18 @@ function generateGraph() {
     const nodeMap = new Map();
 
     G.forEach((size, word) => {
+        const directFrequency = wordFreq[word] || 0;
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength / 4);
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
-
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
         let neighborProximity = Math.pow(connectedEdges, -neighborWeight);
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
-
+    
         const scale = 10;
         const node = {
             x: (Math.random() - 0.5) * combinedProximity * scale,
             y: (Math.random() - 0.5) * combinedProximity * scale,
             z: (Math.random() - 0.5) * combinedProximity * scale,
-            text: word === targetWord ? word : `${word}: ${size}`,
+            text: word === targetWord ? word : `${word}: ${directFrequency}`,
             size: 10,
             word: word,
             color: size
@@ -594,18 +594,18 @@ function generateOldGraph() {
     const nodeMap = new Map();
 
     G.forEach((size, word) => {
+        const directFrequency = wordFreq[word] || 0;
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength / 4);
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
-
-        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
         let neighborProximity = Math.pow(connectedEdges, -neighborWeight);
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
-
+    
         const scale = 10;
         const node = {
             x: (Math.random() - 0.5) * combinedProximity * scale,
             y: (Math.random() - 0.5) * combinedProximity * scale,
             z: (Math.random() - 0.5) * combinedProximity * scale,
-            text: word === targetWord ? word : `${word}: ${size}`,
+            text: word === targetWord ? word : `${word}: ${directFrequency}`,
             size: 10,
             word: word,
             color: size
