@@ -269,17 +269,16 @@ function generateGraph() {
         }
     });
 
+    const maxFreq = Math.max(...Array.from(G.values()));
+
     const nodes = [];
     const nodeMap = new Map();
 
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
 
-        const targetProximity = Math.pow(1 - (size / wordFreq[targetWord]), targetProximityStrength / 4);
-        let neighborProximity = 1;
-        if (neighborsDict[word]) {
-            neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
-        }
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
+        let neighborProximity = Math.pow(connectedEdges, -neighborWeight);
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
 
         const scale = 10;
@@ -589,17 +588,16 @@ function generateOldGraph() {
         }
     });
 
+    const maxFreq = Math.max(...Array.from(G.values()));
+
     const nodes = [];
     const nodeMap = new Map();
 
     G.forEach((size, word) => {
         const connectedEdges = edges.filter(edge => edge.includes(word)).length;
 
-        const targetProximity = Math.pow(1 - (size / wordFreq[targetWord]), targetProximityStrength / 4);
-        let neighborProximity = 1;
-        if (neighborsDict[word]) {
-            neighborProximity = Math.pow(connectedEdges, -neighborWeight * 2);
-        }
+        const targetProximity = Math.pow(1 - (size / maxFreq), targetProximityStrength/4);
+        let neighborProximity = Math.pow(connectedEdges, -neighborWeight);
         const combinedProximity = (targetProximity * (1 - neighborWeight)) + (neighborProximity * neighborWeight);
 
         const scale = 10;
